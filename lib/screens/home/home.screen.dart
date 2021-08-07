@@ -1,5 +1,6 @@
 import 'package:base_flutter_app/data/model/movie.model.dart';
 import 'package:base_flutter_app/data/repositories/movie.repository.dart';
+import 'package:base_flutter_app/screens/home/home.controller.dart';
 import 'package:base_flutter_app/utils/widgets/movie.appbar.widget.dart';
 import 'package:base_flutter_app/utils/widgets/similarmovie.list.widget.dart';
 import 'package:flutter/material.dart';
@@ -11,34 +12,39 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Movie? movie;
+  HomeController controller = HomeController();
 
-  @override
-  void initState() {
-    MovieRepository().getMovie(500).then((value) {
-      setState(() {
-        movie = value;
-      });
-    });
-    super.initState();
-  }
-
-  @override
+    @override
   Widget build(BuildContext context) {
-    if (movie == null)
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
-    return Scaffold(
-      body: CustomScrollView(
-        controller: ScrollController(),
-      slivers: <Widget>[
-        MyAppBar(movie!),
-        SliverToBoxAdapter(
-          child: MovieTitleBar(movie!),
-        ),
-        SimilarMovieList(movie!.id),
-      ],
-      ),
-    );
+
+    return FutureBuilder(
+        future: controller.getMovie(550),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              if(!snapshot.hasData)
+                return Scaffold(body: Center(child: CircularProgressIndicator()));
+              Movie movie = snapshot.data as Movie;
+              return Scaffold(
+                body: CustomScrollView(
+                  controller: ScrollController(),
+                  slivers: <Widget>[
+                    MyAppBar(movie),
+                    SliverToBoxAdapter(
+                      child: MovieTitleBar(movie),
+                    ),
+                    SimilarMovieList(movie.id),
+                  ],
+                ),
+              );
+
+              break;
+            default:
+              return Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+    });
+
+
   }
 }
 
